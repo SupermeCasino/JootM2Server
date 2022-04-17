@@ -1,6 +1,5 @@
 package joot.m2.server;
 
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
@@ -24,11 +23,8 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         		
         		case HUM_ACTION_CHANGE: {
         			// TODO 校验地图/人物/npc/怪物重合
-        			var buf = Unpooled.buffer();
         			// 广播人物动作更改
-        			Messages.pack(msg, buf);
-        			var writeMsg = new BinaryWebSocketFrame(buf);
-        			allChannelGroup.writeAndFlush(writeMsg);
+        			allChannelGroup.writeAndFlush(new BinaryWebSocketFrame(Messages.pack(msg)));
         			break;
         		}
         		

@@ -7,6 +7,7 @@ import com.github.jootnet.mir2.core.actor.Direction;
 import com.github.jootnet.mir2.core.actor.HumActionInfo;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import joot.m2.server.net.messages.HumActionChange;
 
 /**
@@ -18,9 +19,10 @@ public final class Messages {
 	 * 将消息打包到数据缓冲区
 	 * 
 	 * @param message 消息
-	 * @param buffer 缓冲区
+	 * @return 缓冲区
 	 */
-	public static void pack(Message message, ByteBuf buffer) {
+	public static ByteBuf pack(Message message) {
+		ByteBuf buffer = Unpooled.buffer();
 		
 		switch (message.type()) {
 		
@@ -46,6 +48,7 @@ public final class Messages {
 		default:break;
 		}
 		
+		return buffer;
 	}
 	
 	
