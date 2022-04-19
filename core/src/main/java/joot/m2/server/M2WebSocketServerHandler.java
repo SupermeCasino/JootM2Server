@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import joot.m2.server.net.Messages;
+import joot.m2.server.net.messages.LoginReq;
+import joot.m2.server.net.messages.LoginResp;
 
 public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 	// 所有人物 FIXME 改为地图/区域等
@@ -19,7 +21,7 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         if (frame instanceof BinaryWebSocketFrame) {
         	try {
         		var msg = Messages.unpack(frame.content());
-        		switch (msg.type() ) {
+        		switch (msg.type()) {
         		
         		case HUM_ACTION_CHANGE: {
         			// TODO 校验地图/人物/npc/怪物重合
@@ -27,7 +29,33 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         			allChannelGroup.writeAndFlush(new BinaryWebSocketFrame(Messages.pack(msg)));
         			break;
         		}
-        		
+        		case LOGIN_REQ: {
+        			var loginReq = (LoginReq) msg;
+        			var unas = new String[] {
+        					"ll01131458",
+        					"legendarycici",
+        					"linxing"
+        			};
+        			var psws = new String[] {
+        					"123456",
+        					"123456",
+        					"123456"
+        			};
+        			for (var i = 0; i < unas.length; ++i) {
+        				if (loginReq.una().equals(unas[i])) {
+        					if (loginReq.psw().equals(psws[i])) {
+        						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(0, null))));
+        						return;
+        					}
+    						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(1, null))));
+    						return;
+        				}
+        			}
+					ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(2, null))));
+        			break;
+        		}
+				default:
+					break;
         		}
         	} catch (Exception ex) {
         		ex.printStackTrace();
@@ -43,6 +71,6 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
     
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-    	allChannelGroup.remove(ctx.channel());
+    	//allChannelGroup.remove(ctx.channel());
     }
 }

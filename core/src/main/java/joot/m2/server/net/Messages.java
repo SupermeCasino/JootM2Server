@@ -9,6 +9,8 @@ import com.github.jootnet.mir2.core.actor.HumActionInfo;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import joot.m2.server.net.messages.HumActionChange;
+import joot.m2.server.net.messages.LoginReq;
+import joot.m2.server.net.messages.LoginResp;
 
 /**
  * 消息工具类
@@ -23,13 +25,13 @@ public final class Messages {
 	 */
 	public static ByteBuf pack(Message message) {
 		ByteBuf buffer = Unpooled.buffer();
+		// 0.类型
+		buffer.writeInt(message.type().id());
 		
 		switch (message.type()) {
 		
 		case HUM_ACTION_CHANGE: {
 			var humActionChange = (HumActionChange) message;
-			// 0.类型
-			buffer.writeInt(message.type().id());
 			// 1.人物姓名
 			byte[] nameBytes = humActionChange.name().getBytes(StandardCharsets.UTF_8);
 			buffer.writeByte((byte) nameBytes.length);
@@ -41,6 +43,21 @@ public final class Messages {
 			buffer.writeShort((short) humActionChange.nextY());
 			// 3.动作
 			pack(humActionChange.action(), buffer);
+			break;
+		}
+		
+		case LOGIN_RESP: {
+			var loginResp = (LoginResp) message;
+			// 1.错误码
+			buffer.writeInt(loginResp.code());
+			// 2.服务端消息
+			if (loginResp.serverTip() != null) {
+				byte[] tipBytes = loginResp.serverTip().getBytes(StandardCharsets.UTF_8);
+				buffer.writeByte((byte) tipBytes.length);
+				buffer.writeBytes(tipBytes);
+			} else {
+				buffer.writeByte(0);
+			}
 			break;
 		}
 		
@@ -86,6 +103,15 @@ public final class Messages {
 			return new HumActionChange(new String(nameBytes, StandardCharsets.UTF_8), x, y, nx, ny, humActionInfo);
 		}
 		
+		case LOGIN_REQ: {
+			byte unaBytesLen = buffer.readByte();
+			byte[] unaBytes = new byte[unaBytesLen];
+			buffer.readBytes(unaBytes);
+			byte pswBytesLen = buffer.readByte();
+			byte[] pswBytes = new byte[pswBytesLen];
+			buffer.readBytes(pswBytes);
+			return new LoginReq(new String(unaBytes, StandardCharsets.UTF_8), new String(pswBytes, StandardCharsets.UTF_8));
+		}
 		
 		default:break;
 		}
