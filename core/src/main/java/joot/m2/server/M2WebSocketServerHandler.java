@@ -44,14 +44,17 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         			for (var i = 0; i < unas.length; ++i) {
         				if (loginReq.una().equals(unas[i])) {
         					if (loginReq.psw().equals(psws[i])) {
-        						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(0, null))));
+        						var roles = new LoginResp.Role[1];
+        						roles[0] = new LoginResp.Role();
+        						roles[0].name = i == 0 ? "AlexKit" : i == 1 ? "二条" : "林星";
+        						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(0, null, roles))));
         						return;
         					}
-    						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(1, null))));
+    						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(1, null, null))));
     						return;
         				}
         			}
-					ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(2, null))));
+					ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Messages.pack(new LoginResp(2, null, null))));
         			break;
         		}
 				default:

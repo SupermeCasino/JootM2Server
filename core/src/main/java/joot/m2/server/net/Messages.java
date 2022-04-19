@@ -58,6 +58,20 @@ public final class Messages {
 			} else {
 				buffer.writeByte(0);
 			}
+			// 3.角色列表
+			if (loginResp.roles() != null) {
+				buffer.writeByte((byte) loginResp.roles().length);
+				for (var r : loginResp.roles()) {
+					buffer.writeInt(r.type);
+					buffer.writeInt(r.level);
+					buffer.writeInt(r.status);
+					byte[] nameBytes = r.name.getBytes(StandardCharsets.UTF_8);
+					buffer.writeByte((byte) nameBytes.length);
+					buffer.writeBytes(nameBytes);
+				}
+			} else {
+				buffer.writeByte(0);
+			}
 			break;
 		}
 		
