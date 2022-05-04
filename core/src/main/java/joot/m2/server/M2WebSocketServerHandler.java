@@ -21,6 +21,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
+import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
@@ -110,7 +111,7 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
     								, new ChrPrivateInfo(50, 100, 0, 50, 5, 15, 0, 12, AttackMode.All))))));
     				allChannelGroup.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(
     						new EnterResp(null
-    								, cbi, null, null)))), chn -> chn != ctx.channel());
+    								, cbi, null, null)))), chn -> !chn.equals(ctx.channel()));
         			break;
         		}
 				default:
@@ -119,19 +120,20 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         	} catch (Exception ex) {
         		ex.printStackTrace();
         	}
+        } else if (frame instanceof TextWebSocketFrame) {
+        	var text = ((TextWebSocketFrame) frame).text();
+        	if (text.equals("Hello wrold!")) {
+            	allChannelGroup.add(ctx.channel());
+	        	ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(new SysInfo(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+	        			, 2, new String[] {"0", "3"}, new String[] {"比奇省", "盟重省"}, new int[] {100, 105})))));
+        	}
         }
         
     }
     
     @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-    	allChannelGroup.add(ctx.channel());
-    	ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(new SysInfo(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-    			, 2, new String[] {"0", "3"}, new String[] {"比奇省", "盟重省"}, new int[] {100, 105})))));
-    }
+    public void channelActive(ChannelHandlerContext ctx) throws Exception { }
     
     @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-    	//allChannelGroup.remove(ctx.channel());
-    }
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception { }
 }
