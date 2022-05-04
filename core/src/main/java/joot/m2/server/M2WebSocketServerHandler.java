@@ -1,12 +1,19 @@
 package joot.m2.server;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+
+import com.github.jootnet.m2.core.actor.AttackMode;
 import com.github.jootnet.m2.core.actor.ChrBasicInfo;
+import com.github.jootnet.m2.core.actor.ChrPrivateInfo;
+import com.github.jootnet.m2.core.actor.ChrPublicInfo;
 import com.github.jootnet.m2.core.actor.Occupation;
 import com.github.jootnet.m2.core.net.Messages;
 import com.github.jootnet.m2.core.net.messages.EnterReq;
 import com.github.jootnet.m2.core.net.messages.EnterResp;
 import com.github.jootnet.m2.core.net.messages.LoginReq;
 import com.github.jootnet.m2.core.net.messages.LoginResp;
+import com.github.jootnet.m2.core.net.messages.SysInfo;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -55,6 +62,9 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         						roles[0] = new LoginResp.Role();
         						roles[0].name = i == 0 ? "AlexKit" : i == 1 ? "二条" : "林星";
         						roles[0].level = 1;
+        						roles[0].mapNo = "3";
+        						roles[0].x = 300;
+        						roles[0].y = 300;
         						ctx.channel().attr(AttributeKey.valueOf("una")).set(loginReq.una);
         						ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(new LoginResp(0, null, roles, roles[0].name)))));
         						return;
@@ -92,9 +102,15 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
         				ctx.channel().close();
         				break;
         			}
+        			var cbi = new ChrBasicInfo(enterReq.chrName, (byte) 0, Occupation.warrior, 1, 19, 19, 10, 15, 0, 1, 0, 0, 0, 0, 0, 0, 300, 300);
+    				ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(
+    						new EnterResp(null
+    								, cbi
+    								, new ChrPublicInfo(1, 1, 0, 0, 0, 0, 0, 0, 0, 0)
+    								, new ChrPrivateInfo(50, 100, 0, 50, 5, 15, 0, 12, AttackMode.All))))));
     				allChannelGroup.writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(
-    						new EnterResp(null, new ChrBasicInfo(enterReq.chrName, Occupation.warrior, 1, 19, 15, "3", 300, 300))
-    						))));
+    						new EnterResp(null
+    								, cbi, null, null)))), chn -> chn != ctx.channel());
         			break;
         		}
 				default:
@@ -110,6 +126,8 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
     	allChannelGroup.add(ctx.channel());
+    	ctx.channel().writeAndFlush(new BinaryWebSocketFrame(Unpooled.wrappedBuffer(Messages.pack(new SysInfo(LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+    			, 2, new String[] {"0", "3"}, new String[] {"比奇省", "盟重省"}, new int[] {100, 105})))));
     }
     
     @Override
