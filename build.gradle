@@ -39,6 +39,6 @@ project(":core") {
 
     dependencies {
     	implementation 'io.netty:netty-all:4.1.76.Final'
-        implementation 'com.github.jootnet:JootM2Core:9c2ebce025'
+        implementation 'com.github.jootnet:JootM2Core:64796619f6'
     }
 }
