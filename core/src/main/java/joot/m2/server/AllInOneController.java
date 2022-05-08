@@ -94,6 +94,7 @@ public class AllInOneController {
 				resp(chn, new LoginResp(3, null, null, null));
 				// TODO 告知链接已被挤掉
 				sessions.get(loginReq.una).channel.close();
+				sessions.get(loginReq.una).channel = null;
 				return;
 			}
 			var ses = new Session();
