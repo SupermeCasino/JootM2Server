@@ -90,17 +90,6 @@ public class AllInOneController {
 		}
 		case LOGIN_REQ: { // 登陆
 			var loginReq = (LoginReq) msg;
-			if (sessions.containsKey(loginReq.una) && sessions.get(loginReq.una).channel != null) {
-				resp(chn, new LoginResp(3, null, null, null));
-				// TODO 告知链接已被挤掉
-				sessions.get(loginReq.una).channel.close();
-				sessions.get(loginReq.una).channel = null;
-				return;
-			}
-			var ses = new Session();
-			ses.una = loginReq.una;
-			ses.channel = chn;
-			sessions.put(loginReq.una, ses);
 			try (var redis = redisPool.getResource()) {
 				if (!redis.sismember("unas", loginReq.una)) {
 					resp(chn, new LoginResp(2, null, null, null));
@@ -108,6 +97,13 @@ public class AllInOneController {
 				}
 				if (!redis.hget("user:" + loginReq.una, "psw").equals(loginReq.psw)) {
 					resp(chn, new LoginResp(1, null, null, null));
+					return;
+				}
+				if (sessions.containsKey(loginReq.una) && sessions.get(loginReq.una).channel != null) {
+					resp(chn, new LoginResp(3, null, null, null));
+					// TODO 告知链接已被挤掉
+					sessions.get(loginReq.una).channel.close();
+					sessions.get(loginReq.una).channel = null;
 					return;
 				}
 				logins.add(chn);
@@ -160,6 +156,10 @@ public class AllInOneController {
 					}
 					roles.add(role);
 				}
+				var ses = new Session();
+				ses.una = loginReq.una;
+				ses.channel = chn;
+				sessions.put(loginReq.una, ses);
 				resp(chn, new LoginResp(0, null, roles.toArray(new LoginResp.Role[0]), userInfo.get("lastName")));
 			}
 			break;
