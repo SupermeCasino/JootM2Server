@@ -12,3 +12,5 @@ powered by io.netty
 ## 2022-5-1 chrsel done
 
 ## 2022-5-4 game scene status done
+
+## 2022-5-8 redis oriented
