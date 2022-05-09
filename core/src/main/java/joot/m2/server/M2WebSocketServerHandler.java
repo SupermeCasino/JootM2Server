@@ -9,10 +9,10 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
-	private AllInOneController controller;
+	private MessageHandler messageHandler;
 	
-	public M2WebSocketServerHandler(AllInOneController controller) {
-		this.controller = controller;
+	public M2WebSocketServerHandler(MessageHandler messageHandler) {
+		this.messageHandler = messageHandler;
 	}
 
 	@Override
@@ -20,14 +20,14 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
 
 		if (frame instanceof BinaryWebSocketFrame) {
 			try {
-				controller.onMessage(Message.unpack(frame.content().nioBuffer()), ctx.channel());
+				messageHandler.onMessage(Message.unpack(frame.content().nioBuffer()), ctx.channel());
 			} catch (Exception ex) {
 				ex.printStackTrace();
 			}
 		} else if (frame instanceof TextWebSocketFrame) {
 			var text = ((TextWebSocketFrame) frame).text();
 			if (text.equals("Hello wrold!")) {
-				controller.onOpen(ctx.channel());
+				messageHandler.onOpen(ctx.channel());
 			}
 		}
 
@@ -35,6 +35,6 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		controller.onClose(ctx.channel());
+		messageHandler.onClose(ctx.channel());
 	}
 }

@@ -14,3 +14,5 @@ powered by io.netty
 ## 2022-5-4 game scene status done
 
 ## 2022-5-8 redis oriented
+
+## 2022-5-9 perfect server structure

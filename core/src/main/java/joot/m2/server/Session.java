@@ -24,4 +24,11 @@ public class Session {
 	public ChrBasicInfo cBasic;
 	public ChrPublicInfo cPublic;
 	public ChrPrivateInfo cPrivate;
+	
+	/**
+	 * 关闭会话
+	 */
+	public void close() {
+		if (channel != null) channel.close();
+	}
 }
