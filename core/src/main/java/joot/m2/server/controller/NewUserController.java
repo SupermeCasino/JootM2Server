@@ -33,7 +33,6 @@ public class NewUserController extends Controller {
 				return;
 			}
 			// TODO 校验数据
-			redis.sadd("unas", newUserReq.una);
 			var userInfo = new HashMap<String, String>();
 			userInfo.put("psw", newUserReq.psw);
 			userInfo.put("name", newUserReq.name);
@@ -44,7 +43,15 @@ public class NewUserController extends Controller {
 			userInfo.put("tel", newUserReq.tel);
 			userInfo.put("iPhone", newUserReq.iPhone);
 			userInfo.put("mail", newUserReq.mail);
-			redis.hset("user:" + newUserReq.una, userInfo);
+			var trans = redis.multi();
+			try {
+				trans.sadd("unas", newUserReq.una);
+				trans.hset("user:" + newUserReq.una, userInfo);
+			} catch (Exception ex) {
+				trans.discard();
+				ex.printStackTrace();
+			}
+			trans.exec();
 			ctx.resp(new NewUserResp(0, null, null));
 		}
 
