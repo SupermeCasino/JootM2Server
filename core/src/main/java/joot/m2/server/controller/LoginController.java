@@ -45,6 +45,11 @@ public class LoginController extends Controller {
 				ctx.resp(new LoginResp(3, null, null, null));
 				return;
 			}
+			
+			ses = new Session();
+			ses.una = loginReq.una;
+			ctx.bindSession(ses);
+			
 			var userInfo = redis.hgetAll("user:" + loginReq.una);
 			var chr1 = userInfo.get("chr1");
 			var chr2 = userInfo.get("chr2");
@@ -93,9 +98,6 @@ public class LoginController extends Controller {
 				}
 				roles.add(role);
 			}
-			ses = new Session();
-			ses.una = loginReq.una;
-			ctx.bindSession(ses);
 			ctx.resp(new LoginResp(0, null, roles.toArray(new LoginResp.Role[0]), userInfo.get("lastName")));
 		}
 

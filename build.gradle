@@ -39,7 +39,7 @@ project(":core") {
 
     dependencies {
     	implementation 'io.netty:netty-all:4.1.76.Final'
-        implementation 'com.github.jootnet:JootM2Core:138096d9d1'
+        implementation 'com.github.jootnet:JootM2Core:1e5777a988'
         implementation 'redis.clients:jedis:4.2.2'
     }
 }
