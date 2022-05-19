@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.websocketx.WebSocketFrame;
 
 public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<WebSocketFrame> {
 	private MessageHandler messageHandler;
+	private TextWebSocketFrame PONG = new TextWebSocketFrame("PONG");
 	
 	public M2WebSocketServerHandler(MessageHandler messageHandler) {
 		this.messageHandler = messageHandler;
@@ -28,6 +29,8 @@ public final class M2WebSocketServerHandler extends SimpleChannelInboundHandler<
 			var text = ((TextWebSocketFrame) frame).text();
 			if (text.equals("Hello wrold!")) {
 				messageHandler.onOpen(ctx.channel());
+			} else if (text.equals("PING")) {
+				ctx.channel().writeAndFlush(PONG);
 			}
 		}
 

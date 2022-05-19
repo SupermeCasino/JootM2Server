@@ -69,14 +69,7 @@ public class LoginController extends Controller {
 				role.x = Short.parseShort(chrInfo.get("x"));
 				role.y = Short.parseShort(chrInfo.get("y"));
 				role.name = chr1;
-				var occu = Occupation.valueOf(chrInfo.get("occu"));
-				if (occu == Occupation.warrior) {
-					role.type = 0;
-				} else if (occu == Occupation.master) {
-					role.type = 1;
-				} else if (occu == Occupation.taoist) {
-					role.type = 2;
-				}
+				role.type = Occupation.valueOf(chrInfo.get("occu")).ordinal();
 				roles.add(role);
 			}
 			if (chr2Exist) {
@@ -88,14 +81,7 @@ public class LoginController extends Controller {
 				role.x = Short.parseShort(chrInfo.get("x"));
 				role.y = Short.parseShort(chrInfo.get("y"));
 				role.name = chr2;
-				var occu = Occupation.valueOf(chrInfo.get("occu"));
-				if (occu == Occupation.warrior) {
-					role.type = 0;
-				} else if (occu == Occupation.master) {
-					role.type = 1;
-				} else if (occu == Occupation.taoist) {
-					role.type = 2;
-				}
+				role.type = Occupation.valueOf(chrInfo.get("occu")).ordinal();
 				roles.add(role);
 			}
 			ctx.resp(new LoginResp(0, null, roles.toArray(new LoginResp.Role[0]), userInfo.get("lastName")));

@@ -3,6 +3,7 @@ package joot.m2.server;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,6 +17,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.http.websocketx.BinaryWebSocketFrame;
 import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import redis.clients.jedis.Transaction;
 
 /**
  * 消息分发器
@@ -55,9 +57,15 @@ public class MessageHandler implements ControllerContex {
 	public void onClose(Channel chn) {
 		var attrKey = AttributeKey.<String>valueOf("una");
 		if (chn.hasAttr(attrKey)) {
-			var una = chn.attr(attrKey).getAndSet(null);
-			if (una != null)
+			var una = chn.attr(attrKey).get();
+			if (una != null) {
+				try (var redis = Controller.redisPool.getResource()) {
+					var multi = redis.multi();
+					saveChrInfo(multi);
+					multi.exec();
+				}
 				sessions.remove(una);
+			}
 		}
 	}
 	
@@ -144,6 +152,16 @@ public class MessageHandler implements ControllerContex {
 	}
 
 	@Override
+	public void unbindSession() {
+		var chn = curChn.get();
+		var attr = chn.attr(AttributeKey.<String>valueOf("una"));
+		var ses = sessions.remove(attr.getAndSet(null));
+		if (ses != null)
+			ses.channel = null;
+		logins.remove(chn);
+	}
+
+	@Override
 	public Session getSession(String una) {
 		return sessions.get(una);
 	}
@@ -155,7 +173,62 @@ public class MessageHandler implements ControllerContex {
 
 	@Override
 	public void enterMap(String mapNo) {
+		getSession().mapNo = mapNo;
 		mapGroups.get(mapNo).add(curChn.get());
+	}
+
+	@Override
+	public void leaveMap() {
+		var ses = getSession();
+		mapGroups.get(ses.mapNo).remove(curChn.get());
+		ses.mapNo = null;
+	}
+
+	@Override
+	public void saveChrInfo(Transaction multi) {
+		var ses = getSession();
+		if (ses.cBasic == null) return;
+		var chrInfo = new HashMap<String, String>();
+		chrInfo.put("gender", String.valueOf(ses.cBasic.gender));
+		chrInfo.put("occu", ses.cBasic.occupation.name());
+		chrInfo.put("level", String.valueOf(ses.cBasic.level));
+		chrInfo.put("hp", String.valueOf(ses.cBasic.hp));
+		chrInfo.put("maxHp", String.valueOf(ses.cBasic.maxHp));
+		chrInfo.put("mp", String.valueOf(ses.cBasic.mp));
+		chrInfo.put("maxMp", String.valueOf(ses.cBasic.maxMp));
+		chrInfo.put("humFileIdx", String.valueOf(ses.cBasic.humFileIdx));
+		chrInfo.put("humIdx", String.valueOf(ses.cBasic.humIdx));
+		chrInfo.put("humEffectFileIdx", String.valueOf(ses.cBasic.humEffectFileIdx));
+		chrInfo.put("humEffectIdx", String.valueOf(ses.cBasic.humEffectIdx));
+		chrInfo.put("weaponFileIdx", String.valueOf(ses.cBasic.weaponFileIdx));
+		chrInfo.put("weaponIdx", String.valueOf(ses.cBasic.weaponIdx));
+		chrInfo.put("weaponEffectFileIdx", String.valueOf(ses.cBasic.weaponEffectFileIdx));
+		chrInfo.put("weaponEffectIdx", String.valueOf(ses.cBasic.weaponEffectIdx));
+		chrInfo.put("x", String.valueOf(ses.cBasic.x));
+		chrInfo.put("y", String.valueOf(ses.cBasic.y));
+		if (ses.cBasic.guildName != null)
+			chrInfo.put("guildName", ses.cBasic.guildName);
+		chrInfo.put("exp", String.valueOf(ses.cPrivate.exp));
+		chrInfo.put("levelUpExp", String.valueOf(ses.cPrivate.levelUpExp));
+		chrInfo.put("bagWeight", String.valueOf(ses.cPrivate.bagWeight));
+		chrInfo.put("maxBagWeight", String.valueOf(ses.cPrivate.maxBagWeight));
+		chrInfo.put("wearWeight", String.valueOf(ses.cPrivate.wearWeight));
+		chrInfo.put("maxWearWeight", String.valueOf(ses.cPrivate.maxWearWeight));
+		chrInfo.put("handWeight", String.valueOf(ses.cPrivate.handWeight));
+		chrInfo.put("maxHandWeight", String.valueOf(ses.cPrivate.maxHandWeight));
+		chrInfo.put("attackMode", ses.cPrivate.attackMode.name());
+		chrInfo.put("attackPoint", String.valueOf(ses.cPublic.attackPoint));
+		chrInfo.put("maxAttackPoint", String.valueOf(ses.cPublic.maxAttackPoint));
+		chrInfo.put("magicAttackPoint", String.valueOf(ses.cPublic.magicAttackPoint));
+		chrInfo.put("maxMagicAttackPoint", String.valueOf(ses.cPublic.maxMagicAttackPoint));
+		chrInfo.put("taositAttackPoint", String.valueOf(ses.cPublic.taositAttackPoint));
+		chrInfo.put("maxTaositAttackPoint", String.valueOf(ses.cPublic.maxTaositAttackPoint));
+		chrInfo.put("defensePoint", String.valueOf(ses.cPublic.defensePoint));
+		chrInfo.put("maxDefensePoint", String.valueOf(ses.cPublic.maxDefensePoint));
+		chrInfo.put("magicDefensePoint", String.valueOf(ses.cPublic.magicDefensePoint));
+		chrInfo.put("maxMagicDefensePoint", String.valueOf(ses.cPublic.maxMagicDefensePoint));
+		chrInfo.put("map", ses.mapNo);
+		multi.hset("chr:" + ses.cBasic.name, chrInfo);
 	}
 
 }

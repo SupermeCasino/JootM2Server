@@ -36,7 +36,6 @@ public class EnterController extends Controller {
 			redis.hset("user:" + ses.una, "lastName", enterReq.chrName);
 			
 			var chrInfo = redis.hgetAll("chr:" + enterReq.chrName);
-			ses.mapNo = chrInfo.get("map");
 			var name = enterReq.chrName;
 			var gender = Byte.parseByte(chrInfo.get("gender"));
 			var occu = Occupation.valueOf(chrInfo.get("occu"));
@@ -166,7 +165,7 @@ public class EnterController extends Controller {
 			ses.cPrivate = cPrivate;
 			ses.cPublic = cPublic;
 			
-			ctx.enterMap(ses.mapNo);
+			ctx.enterMap(chrInfo.get("map"));
 			ctx.resp(new EnterResp(null, cBasic, cPublic, cPrivate));
 			ctx.sendMap(ses.mapNo, new EnterResp(null, cBasic, null, null), true);
 		}

@@ -4,6 +4,8 @@ import java.io.IOException;
 
 import com.github.jootnet.m2.core.net.Message;
 
+import redis.clients.jedis.Transaction;
+
 /**
  * 消息处理器上下文
  * 
@@ -82,9 +84,21 @@ public interface ControllerContex {
 	 */
 	void bindSession(Session ses);
 	/**
+	 * 解除会话
+	 */
+	void unbindSession();
+	/**
 	 * 修改当前会话角色身处地图
 	 * 
 	 * @param mapNo 地图编号
 	 */
 	void enterMap(String mapNo);
+	/**
+	 * 角色离开地图
+	 */
+	void leaveMap();
+	/**
+	 * 保存角色信息
+	 */
+	void saveChrInfo(Transaction redis);
 }
