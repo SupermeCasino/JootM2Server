@@ -33,6 +33,7 @@ public class EnterController extends Controller {
 		var enterReq = (EnterReq) msg;
 		var ses = ctx.getSession();
 		try (var redis = redisPool.getResource()) {
+			// TODO 角色不存在
 			redis.hset("user:" + ses.una, "lastName", enterReq.chrName);
 			
 			var chrInfo = redis.hgetAll("chr:" + enterReq.chrName);
